@@ -1,16 +1,35 @@
-var request = require('request'); // used to make HTTP requests
-var URL = require('url-parse'); // used to parse URLs
-var cheerio = require('cheerio'); // used to parse and select links on page
+/**
+ * crawler.js is a simple web crawler that will visit every reachable page from a starting URL. This web crawler should
+ * not cross subdomains. For example, when crawling http://www.example.com, it should not crawl http://mail.example.com. For
+ * each page, this crawler should determine the URL of every static asset on that page. Static assets include images, javascript
+ * files, and CSS stylesheets. This crawler should output to console in JSON format a list of all static assets grouped by 
+ * what page they were found on.
+ * 
+ * @summary crawler.js is a simple web crawler that will get all static assets for every reachable page from a starting URL.
+ *
+ * author - Paul Chong
+ * date - Monday, February 27, 2017
+ */
+
+// used to make HTTP requests
+var request = require('request');
+
+// used to parse URLs
+var URL = require('url-parse');
+
+// used to parse and select links on page
+var cheerio = require('cheerio'); 
 
 var startURL = process.argv[2];
 var pagesVisited = [];
 var pagesToVisit = [];
 var resultArray = [];
 
-var srcArray = ['img', 'script'];
+const srcArray = ['img', 'script'];
 var pageVisited = 0;
 
-var isUrl = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/; // regex for URL check
+// regex for URL check
+var isUrl = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/; 
 
 if (isUrl.test(startURL)) {
 	var url = new URL(process.argv[2]);
@@ -22,6 +41,10 @@ if (isUrl.test(startURL)) {
 	console.log('Error: Argument 2 is not a URL. Please include protocol and resource. For example: http://example.com');
 }
 
+/**
+ * crawl() will go through the pagesToVisit array, skipping over pages that have been already been visited, and push 
+ * an object to the resultArray. If there are no pages in pagesToVisit, then this function will console.log the resultArray.
+ */
 function crawl() {
 	if (pagesToVisit.length !== 0) {
 		var nextPage = pagesToVisit.pop();
@@ -37,8 +60,16 @@ function crawl() {
 	} else {
 		console.log(resultArray);
 	}
+	return;
 }
 
+/**
+ * visitPage() will make an HTTP request to the given URL, call getSources() and getStylesheets() on the response body, 
+ * and go through all relative links of the given URL and push them into the pagesToVisit array.
+ *
+ * @param {String} url
+ * @param {Object} callback
+ */
 function visitPage(url, callback) {
 	pagesVisited[url] = true;
 	console.log("Visiting page " + url);
@@ -49,12 +80,11 @@ function visitPage(url, callback) {
 		}
 		var $ = cheerio.load(body);
 
-		// getImages(body);
-		// getJS(body);
-
 		for (let i = 0 ; i < srcArray.length; i++) {
 			getSources(body, srcArray[i]);
 		}
+
+		console.log(typeof body)
 		getStylesheets(body);
 
 		var relativeLinks = $("a[href^='/']");
@@ -73,8 +103,16 @@ function visitPage(url, callback) {
 		pageVisited++;
 		callback();
 	})
+	return;
 }
 
+/**
+ * getSources() will go through the given body and search for the given tag and push all 'src's into the the current
+ * page's assets array in the resultArray.
+ *
+ * @param {String} body
+ * @param {String} tag
+ */
 function getSources(body, tag) {
 	var $ = cheerio.load(body);
 	var imgLinks = $(tag);
@@ -92,9 +130,15 @@ function getSources(body, tag) {
 			}
 		});
 	}
+	return;
 }
 
-
+/**
+ * getStylesheets() will go through the given body and search for the link tag and push all 'href's into the current
+ * page's assets array in the resultArray.
+ *
+ * @param {String} body
+ */
 function getStylesheets(body) {
 	var $ = cheerio.load(body);
 	var stylesheetLinks = $('link');
@@ -113,4 +157,5 @@ function getStylesheets(body) {
 			}
 		})
 	}
+	return;
 }
