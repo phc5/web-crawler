@@ -6,6 +6,8 @@ var startURL = process.argv[2];
 var pagesVisited = [];
 var pagesToVisit = [];
 var resultArray = [];
+
+var srcArray = ['img', 'script'];
 var pageVisited = 0;
 
 var isUrl = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/; // regex for URL check
@@ -47,26 +49,35 @@ function visitPage(url, callback) {
 		}
 		var $ = cheerio.load(body);
 
-		getImages(body);
-		getJS(body);
+		// getImages(body);
+		// getJS(body);
+
+		for (let i = 0 ; i < srcArray.length; i++) {
+			getSources(body, srcArray[i]);
+		}
 		getStylesheets(body);
 
 		var relativeLinks = $("a[href^='/']");
 		relativeLinks.each(function() {
-			var sameLink = baseURL + $(this).attr('href');
-			if ($(this).attr('href')[0] + $(this).attr('href')[1] !== '//') {
+			
+			var urlNoProtocol = baseURL.replace(/^https?\:\/\//i, ""); // stackoverflow.com/questions/3999764/taking-off-the-http-or-https-off-a-javascript-string
+			
+			if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
+				if ($(this).attr('href').slice(2) === urlNoProtocol + $(this).attr('href').slice(urlNoProtocol.length + 2)) {
+					pagesToVisit.push($(this).attr('href').slice(2));
+				}
+			} else if ($(this).attr('href')[0] === '/') {
 				pagesToVisit.push(baseURL + $(this).attr('href'));
 			}
-			
 		})
 		pageVisited++;
 		callback();
 	})
 }
 
-function getImages(body) {
+function getSources(body, tag) {
 	var $ = cheerio.load(body);
-	var imgLinks = $('img');
+	var imgLinks = $(tag);
 	if (imgLinks.length !== 0) {
 		imgLinks.each(function() {
 			if ($(this).attr('src')) {
@@ -83,23 +94,6 @@ function getImages(body) {
 	}
 }
 
-function getJS(body) {
-	var $ = cheerio.load(body);
-	var jsLinks = $('script');
-	if (jsLinks.length !== 0) {
-		jsLinks.each(function() {
-			if ($(this).attr('src')) {
-				if ($(this).attr('src')[0] + $(this).attr('src')[1] === '//') {
-					resultArray[pageVisited].assets.push($(this).attr('src').slice(2));
-				} else if ($(this).attr('src')[0] === '/') {
-					resultArray[pageVisited].assets.push(baseURL + $(this).attr('src'));
-				} else {
-					resultArray[pageVisited].assets.push($(this).attr('src'));
-				}
-			}
-		});
-	}
-}
 
 function getStylesheets(body) {
 	var $ = cheerio.load(body);
