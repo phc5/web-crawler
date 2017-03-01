@@ -12,53 +12,57 @@
  */
 
 // used to make HTTP requests
-var request = require('request');
+const request = require('request');
+const URL = require('url-parse');
+const cheerio = require('cheerio');
+const fs = require('fs'); 
 
-// used to parse URLs
-var URL = require('url-parse');
-
-// used to parse and select links on page
-var cheerio = require('cheerio'); 
-
-var startURL = process.argv[2];
-var pagesVisited = [];
-var pagesToVisit = [];
-var resultArray = [];
-
+// var startURL = process.argv[2];
+let pagesVisited = [];
+let pagesToVisit = [];
+let resultArray = [];
+let baseURL = null;
+let pageVisited = 0;
 const srcArray = ['img', 'script'];
-var pageVisited = 0;
 
-// regex for URL check
-var isUrl = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/; 
+const checkURL = function(urlInput) {
+	let isValidURL = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/;
+	let url = new URL(urlInput);
 
-if (isUrl.test(startURL)) {
-	var url = new URL(process.argv[2]);
-	var baseURL = url.protocol + '//' + url.hostname;
-	pagesToVisit.push(startURL);
-	crawl();
-
-} else {
-	console.log('Error: Argument 2 is not a URL. Please include protocol and resource. For example: http://example.com');
+	if (isValidURL.test(url)) {
+		baseURL = url.protocol + '//' + url.hostname;
+		pagesToVisit.push(baseURL + '/');
+		return true;
+	}
+	return false;
 }
 
 /**
  * crawl() will go through the pagesToVisit array, skipping over pages that have been already been visited, and push 
  * an object to the resultArray. If there are no pages in pagesToVisit, then this function will console.log the resultArray.
  */
-var crawl = function() {
-	if (pagesToVisit.length !== 0) {
-		var nextPage = pagesToVisit.pop();
+const crawl = function() {
+	if (pagesToVisit.length > 0) {
+		let nextPage = pagesToVisit.pop();
+
 		if (nextPage in pagesVisited) {
 			crawl();
 		} else {
 			resultArray.push({
 				url: nextPage,
 				assets: []
-			})
+			});
 			visitPage(nextPage, crawl);
 		}
-	} else {
-		console.log(resultArray);
+	} else if (pagesToVisit.length == 0) {
+		fs.writeFile('./output.txt', JSON.stringify(resultArray, null, 2), function(error) {
+			if (error) {
+				console.error('Write error:', error.message);
+			} else {
+				console.log('Write success to output.txt');
+				process.exit();
+			}
+		});
 	}
 }
 
@@ -69,7 +73,7 @@ var crawl = function() {
  * @param {String} url
  * @param {Object} callback
  */
-var visitPage = function(url, callback) {
+function visitPage(url, callback) {
 	pagesVisited[url] = true;
 	console.log("Visiting page " + url);
 
@@ -79,7 +83,7 @@ var visitPage = function(url, callback) {
 			return;
 		}
 
-		var $ = cheerio.load(body);
+		let $ = cheerio.load(body);
 
 		for (let i = 0 ; i < srcArray.length; i++) {
 			getSources(body, srcArray[i]);
@@ -87,23 +91,20 @@ var visitPage = function(url, callback) {
 
 		getStylesheets(body);
 
-		var relativeLinks = $("a[href^='/']");
-		relativeLinks.each(function() {
-			
-			var urlNoProtocol = baseURL.replace(/^https?\:\/\//i, ""); // stackoverflow.com/questions/3999764/taking-off-the-http-or-https-off-a-javascript-string
-			
-			if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
-				if ($(this).attr('href').slice(2) === urlNoProtocol + $(this).attr('href').slice(urlNoProtocol.length + 2)) {
-					pagesToVisit.push($(this).attr('href').slice(2));
-				}
-			} else if ($(this).attr('href')[0] === '/') {
+		let relativeLinks = $("a[href^='/']");
+		if (relativeLinks.length > 0) {
+			relativeLinks.each(function() {
 				pagesToVisit.push(baseURL + $(this).attr('href'));
-			}
-		})
+			});
+		}
+		
 		pageVisited++;
 		callback();
 	})
 }
+
+// stackoverflow.com/questions/3999764/taking-off-the-http-or-https-off-a-javascript-string
+// let urlNoProtocol = baseURL.replace(/^https?\:\/\//i, ""); 
 
 /**
  * getSources() will go through the given body and search for the given tag and push all 'src's into the the current
@@ -112,17 +113,16 @@ var visitPage = function(url, callback) {
  * @param {String} body
  * @param {String} tag
  */
-var getSources = function(body, tag) {
-	var $ = cheerio.load(body);
-	var imgLinks = $(tag);
-	if (imgLinks.length !== 0) {
+function getSources(body, tag) {
+	let $ = cheerio.load(body);
+	let imgLinks = $(tag);
+	if (imgLinks.length > 0) {
 		imgLinks.each(function() {
 			if ($(this).attr('src')) {
 				if ($(this).attr('src')[0] + $(this).attr('src')[1] === '//') {
 					resultArray[pageVisited].assets.push($(this).attr('src').slice(2));
 				} else if ($(this).attr('src')[0] === '/') {
 					resultArray[pageVisited].assets.push(baseURL + $(this).attr('src'));
-					
 				} else {
 					resultArray[pageVisited].assets.push($(this).attr('src'));
 				}
@@ -137,28 +137,23 @@ var getSources = function(body, tag) {
  *
  * @param {String} body
  */
-var getStylesheets = function(body) {
-	var $ = cheerio.load(body);
-	var stylesheetLinks = $('link');
-	if (stylesheetLinks !== 0) {
+function getStylesheets(body) {
+	let $ = cheerio.load(body);
+	let stylesheetLinks = $('link');
+	if (stylesheetLinks > 0) {
 		stylesheetLinks.each(function() {
 			if ($(this).attr('href') && $(this).attr('rel') === 'stylesheet') {
 				if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
 					resultArray[pageVisited].assets.push($(this).attr('href').slice(2));
 				} else if ($(this).attr('href')[0] === '/') {
 					resultArray[pageVisited].assets.push(baseURL + $(this).attr('href'));
-				} else if ($(this).attr('href')[0] + $(this).attr('href')[1] === '..') {
-					resultArray[pageVisited].assets.push(baseURL + $(this).attr('href').slice(2));
 				} else {
 					resultArray[pageVisited].assets.push($(this).attr('href'));
 				}
 			}
-		})
+		});
 	}
 }
 
+exports.checkURL = checkURL;
 exports.crawl = crawl;
-exports.visitPage = visitPage;
-exports.getSources = getSources;
-exports.getStylesheets = getStylesheets;
-exports.helloWorld = helloWorld;

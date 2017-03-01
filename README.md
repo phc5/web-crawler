@@ -34,9 +34,11 @@ Before cloning this repo, make sure you have the latest version of <a href="http
 
 # Usage
 
-1. Run the web crawler: `node crawler.js [URL]`
-  * URL must have protocol and domain. For example, https://www.google.com will work. www.google.com WILL NOT work.
-2. Get results in JSON format. Web crawler may take some time to visit all reachable pages. 
+1. Run the web crawler: `node index.js`
+ 
+2. You will be prompted to enter a URL.
+	* URL must have protocol and domain. For example, https://www.google.com will work. www.google.com WILL NOT work.
+3. Get results in JSON format in an output.txt file. Web crawler may take some time to visit all reachable pages. 
 
 # History
 
@@ -49,7 +51,7 @@ Before cloning this repo, make sure you have the latest version of <a href="http
 - [x] Get static asset: stylesheets
 - [ ] Write tests
 - [ ] Optimize
-- [x] Documentation (in progres...)
+- [x] Documentation (in progress...)
 - [ ] Think of other TODOs
 
 # Links I Found Helpful
