@@ -49,7 +49,7 @@ Before cloning this repo, make sure you have the latest version of <a href="http
 - [x] Get static asset: stylesheets
 - [ ] Write tests
 - [ ] Optimize
-- [ ] Documentation
+- [x] Documentation (in progres...)
 - [ ] Think of other TODOs
 
 # Links I Found Helpful

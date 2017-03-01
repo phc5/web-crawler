@@ -45,7 +45,7 @@ if (isUrl.test(startURL)) {
  * crawl() will go through the pagesToVisit array, skipping over pages that have been already been visited, and push 
  * an object to the resultArray. If there are no pages in pagesToVisit, then this function will console.log the resultArray.
  */
-function crawl() {
+var crawl = function() {
 	if (pagesToVisit.length !== 0) {
 		var nextPage = pagesToVisit.pop();
 		if (nextPage in pagesVisited) {
@@ -60,7 +60,6 @@ function crawl() {
 	} else {
 		console.log(resultArray);
 	}
-	return;
 }
 
 /**
@@ -70,21 +69,22 @@ function crawl() {
  * @param {String} url
  * @param {Object} callback
  */
-function visitPage(url, callback) {
+var visitPage = function(url, callback) {
 	pagesVisited[url] = true;
 	console.log("Visiting page " + url);
+
 	request(url, function(error, response, body) {
 		if (error || response.statusCode !== 200) {
 			callback();
 			return;
 		}
+
 		var $ = cheerio.load(body);
 
 		for (let i = 0 ; i < srcArray.length; i++) {
 			getSources(body, srcArray[i]);
 		}
 
-		console.log(typeof body)
 		getStylesheets(body);
 
 		var relativeLinks = $("a[href^='/']");
@@ -103,7 +103,6 @@ function visitPage(url, callback) {
 		pageVisited++;
 		callback();
 	})
-	return;
 }
 
 /**
@@ -113,7 +112,7 @@ function visitPage(url, callback) {
  * @param {String} body
  * @param {String} tag
  */
-function getSources(body, tag) {
+var getSources = function(body, tag) {
 	var $ = cheerio.load(body);
 	var imgLinks = $(tag);
 	if (imgLinks.length !== 0) {
@@ -130,7 +129,6 @@ function getSources(body, tag) {
 			}
 		});
 	}
-	return;
 }
 
 /**
@@ -139,7 +137,7 @@ function getSources(body, tag) {
  *
  * @param {String} body
  */
-function getStylesheets(body) {
+var getStylesheets = function(body) {
 	var $ = cheerio.load(body);
 	var stylesheetLinks = $('link');
 	if (stylesheetLinks !== 0) {
@@ -157,5 +155,10 @@ function getStylesheets(body) {
 			}
 		})
 	}
-	return;
 }
+
+exports.crawl = crawl;
+exports.visitPage = visitPage;
+exports.getSources = getSources;
+exports.getStylesheets = getStylesheets;
+exports.helloWorld = helloWorld;
