@@ -40,6 +40,22 @@ Before cloning this repo, make sure you have the latest version of <a href="http
 	* URL must have protocol and domain. For example, https://www.google.com will work. www.google.com WILL NOT work.
 3. Get results in JSON format in an output.txt file. Web crawler may take some time to visit all reachable pages. 
 
+# Testing and Coverage
+
+To see test coverage with Istanbul, go into the coverage directory and open index.html in your browser.
+
+- Statements tells up how many of the statements in our code were touched during the test run.
+
+- Branches tells us how many of our logical if/else branches were touched
+
+- Functions tells us how many of our functions were touched
+
+- Lines tells us the total lines of code that were touched
+
+1. To run tests, simply run `npm test` in your project directory.
+
+2. To run istanbul's coverage test, run `istanbul cover index.js`, let the test run and see the test results in index.html in the coverage folder.
+
 # TODOs
 
 - [x] Research web crawlers.
