@@ -49,9 +49,8 @@ Before cloning this repo, make sure you have the latest version of <a href="http
 - [x] Get static asset: images 
 - [x] Get static asset: js
 - [x] Get static asset: stylesheets
-- [ ] Write tests
-- [ ] Optimize
-- [x] Documentation (in progress...)
+- [x] Write tests
+- [x] Documentation 
 - [ ] Think of other TODOs
 
 # Links I Found Helpful
