@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/phc5/web-crawler#readme",
   "dependencies": {
+    "async": "^2.1.5",
     "cheerio": "^0.22.0",
     "fs": "0.0.1-security",
     "mocha": "^3.2.0",

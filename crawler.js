@@ -11,11 +11,10 @@
  * date - Monday, February 27, 2017
  */
 
-// used to make HTTP requests
 const request = require('request');
 const URL = require('url-parse');
 const cheerio = require('cheerio');
-const fs = require('fs'); 
+const fs = require('fs');
 
 // var startURL = process.argv[2];
 let pagesVisited = [];
@@ -24,6 +23,7 @@ let resultArray = [];
 let baseURL = null;
 let pageVisited = 0;
 const srcArray = ['img', 'script'];
+let urlNoProtocol = null; 
 
 const checkURL = function(urlInput) {
 	let isValidURL = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/;
@@ -83,18 +83,26 @@ function visitPage(url, callback) {
 			return;
 		}
 
-		let $ = cheerio.load(body);
-
 		for (let i = 0 ; i < srcArray.length; i++) {
 			getSources(body, srcArray[i]);
 		}
 
 		getStylesheets(body);
 
-		let relativeLinks = $("a[href^='/']");
+		let $ = cheerio.load(body);
+		let relativeLinks = $("a[href^='/']");		
 		if (relativeLinks.length > 0) {
 			relativeLinks.each(function() {
-				pagesToVisit.push(baseURL + $(this).attr('href'));
+				
+				urlNoProtocol = baseURL.replace(/^https:?\:\/\//i,"");
+
+				if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
+					if ($(this).attr('href').slice(2) === urlNoProtocol + $(this).attr('href').slice(urlNoProtocol.length + 2)) {
+						pagesToVisit.push($(this).attr('href').slice(2));
+					}
+				} else if ($(this).attr('href')[0] === '/' && $(this).attr('href')[1] !== '/') {
+					pagesToVisit.push(baseURL + $(this).attr('href'));
+				}
 			});
 		}
 		
@@ -115,12 +123,16 @@ function visitPage(url, callback) {
  */
 function getSources(body, tag) {
 	let $ = cheerio.load(body);
-	let imgLinks = $(tag);
-	if (imgLinks.length > 0) {
-		imgLinks.each(function() {
+	let sourceLinks = $(tag);
+	if (sourceLinks.length > 0) {
+		sourceLinks.each(function() {
 			if ($(this).attr('src')) {
 				if ($(this).attr('src')[0] + $(this).attr('src')[1] === '//') {
-					resultArray[pageVisited].assets.push($(this).attr('src').slice(2));
+					if ($(this).attr('src').slice(2) === urlNoProtocol + $(this).attr('src').slice(urlNoProtocol.length + 2)) {
+						resultArray[pageVisited].assets.push($(this).attr('src').slice(2));
+					} else {
+						resultArray[pageVisited].assets.push($(this).attr('src').slice(2));
+					}
 				} else if ($(this).attr('src')[0] === '/') {
 					resultArray[pageVisited].assets.push(baseURL + $(this).attr('src'));
 				} else {
