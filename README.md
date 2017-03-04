@@ -1,4 +1,4 @@
-# A Simple Web Crawler
+# A Simple Web Crawler using JavaScript
 
 Given a starting URL, this web crawler will visit every reachable page under that domain and return, in JSON format, the URL of the page visited as well as an array of every static assset (images, javascript, stylesheets) found on the page. This web crawler should not cross subdomains (if starting at https://www.google.com, it should not crawl https://mail.google.com).
 
@@ -34,7 +34,7 @@ Before cloning this repo, make sure you have the latest version of <a href="http
 
 # Usage
 
-1. Run the web crawler: `node index.js`
+1. in your project directory, run the web crawler by typing: `node index.js`
  
 2. You will be prompted to enter a URL.
 	* URL must have protocol and domain. For example, https://www.google.com will work. www.google.com WILL NOT work.
