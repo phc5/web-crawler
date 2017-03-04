@@ -150,6 +150,12 @@ function getSources(body, tag) {
 	}
 }
 
+function getStylesheetsCount(body) {
+	let $ = cheerio.load(body);
+	let sourceLinks = $('link');
+	return sourceLinks.length;
+}
+
 /**
  * getStylesheets() will go through the given body and search for the link tag and push all 'href's into the current
  * page's assets array in the resultArray.
@@ -159,7 +165,7 @@ function getSources(body, tag) {
 function getStylesheets(body) {
 	let $ = cheerio.load(body);
 	let stylesheetLinks = $('link');
-	if (stylesheetLinks > 0) {
+	if (stylesheetLinks.length > 0) {
 		stylesheetLinks.each(function() {
 			if ($(this).attr('href') && $(this).attr('rel') === 'stylesheet') {
 				if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
@@ -182,3 +188,5 @@ exports.getRelativeLinksCount = getRelativeLinksCount;
 exports.getRelativeLinks = getRelativeLinks;
 exports.getSourcesCount = getSourcesCount;
 exports.getSources = getSources
+exports.getStylesheetsCount = getStylesheetsCount;
+exports.resultArray = resultArray;

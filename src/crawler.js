@@ -21,9 +21,17 @@ let pagesToVisit = [];
 let resultArray = [];
 let baseURL = null;
 let pageVisited = 0;
-const srcArray = ['img', 'script'];
 let urlNoProtocol = null; 
+let count = 0;
+const srcArray = ['img', 'script'];
 
+/**
+ * checkURL() will take in a string input and test if it is a valid URL with protocal and hostname
+ * by using regex.
+ * 
+ * @param {Srting} urlInput - a string 
+ * @return {Boolean} true - if urlInput is a URL -OR- false - if urlInput is not a URL
+ */
 const checkURL = function(urlInput) {
 	let isValidURL = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/;
 	let url = new URL(urlInput);
@@ -38,7 +46,8 @@ const checkURL = function(urlInput) {
 
 /**
  * crawl() will go through the pagesToVisit array, skipping over pages that have been already been visited, and push 
- * an object to the resultArray. If there are no pages in pagesToVisit, then this function will console.log the resultArray.
+ * an object to the resultArray. If there are no pages in pagesToVisit, then this function will write to an output.txt
+ * file in the project directory.
  */
 const crawl = function() {
 	if (pagesToVisit.length > 0) {
@@ -53,7 +62,7 @@ const crawl = function() {
 			});
 			visitPage(nextPage, crawl);
 		}
-	} else if (pagesToVisit.length == 0) {
+	} else if (pagesToVisit.length == 0) {	
 		fs.writeFile('./output.txt', JSON.stringify(resultArray, null, 2), function(error) {
 			if (error) {
 				console.error('Write error:', error.message);
@@ -74,34 +83,35 @@ const crawl = function() {
  */
 function visitPage(url, callback) {
 	pagesVisited[url] = true;
-	console.log("Visiting page " + url);
+	count++;
+	console.log(count + " Visiting page " + url);
 
 	request(url, function(error, response, body) {
 		if (error || response.statusCode !== 200) {
 			callback();
 			return;
 		}
+
+		// stackoverflow.com/questions/3999764/taking-off-the-http-or-https-off-a-javascript-string
 		urlNoProtocol = baseURL.replace(/^https:?\:\/\//i,"");
 
+		let $ = cheerio.load(body);
 		for (let i = 0 ; i < srcArray.length; i++) {
-			getSources(body, srcArray[i]);
+			getSources(body, srcArray[i], $);
 		}
+		getStylesheets(body, $);
 
-		getStylesheets(body);
-		getRelativeLinks(body);
+		getRelativeLinks(body, $);
 		
 		pageVisited++;
 		callback();
 	})
 }
 
-function getRelativeLinks(body) {
-	let $ = cheerio.load(body);
+function getRelativeLinks(body, $) {	
 	let relativeLinks = $("a[href^='/']");		
 	if (relativeLinks.length > 0) {
-		console.log(relativeLinks.length);
 		relativeLinks.each(function() {
-			console.log($(this).attr('href'))
 			if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
 				if ($(this).attr('href').slice(2) === urlNoProtocol + $(this).attr('href').slice(urlNoProtocol.length + 2)) {
 					pagesToVisit.push($(this).attr('href').slice(2));
@@ -113,8 +123,6 @@ function getRelativeLinks(body) {
 	}
 }
 
-// stackoverflow.com/questions/3999764/taking-off-the-http-or-https-off-a-javascript-string
-// let urlNoProtocol = baseURL.replace(/^https?\:\/\//i, ""); 
 
 /**
  * getSources() will go through the given body and search for the given tag and push all 'src's into the the current
@@ -123,8 +131,7 @@ function getRelativeLinks(body) {
  * @param {String} body
  * @param {String} tag
  */
-function getSources(body, tag) {
-	let $ = cheerio.load(body);
+function getSources(body, tag, $) {
 	let sourceLinks = $(tag);
 	if (sourceLinks.length > 0) {
 		sourceLinks.each(function() {
@@ -151,10 +158,10 @@ function getSources(body, tag) {
  *
  * @param {String} body
  */
-function getStylesheets(body) {
-	let $ = cheerio.load(body);
+function getStylesheets(body, $) {
 	let stylesheetLinks = $('link');
-	if (stylesheetLinks > 0) {
+
+	if (stylesheetLinks.length > 0) {
 		stylesheetLinks.each(function() {
 			if ($(this).attr('href') && $(this).attr('rel') === 'stylesheet') {
 				if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
