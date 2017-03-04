@@ -1,4 +1,4 @@
-var crawler = require('./crawler.js');
+var crawler = require('./src/crawler.js');
 
 function prompt(question, callback) {
 	let stdin = process.stdin;

@@ -16,7 +16,6 @@ const URL = require('url-parse');
 const cheerio = require('cheerio');
 const fs = require('fs');
 
-// var startURL = process.argv[2];
 let pagesVisited = [];
 let pagesToVisit = [];
 let resultArray = [];
@@ -82,33 +81,36 @@ function visitPage(url, callback) {
 			callback();
 			return;
 		}
+		urlNoProtocol = baseURL.replace(/^https:?\:\/\//i,"");
 
 		for (let i = 0 ; i < srcArray.length; i++) {
 			getSources(body, srcArray[i]);
 		}
 
 		getStylesheets(body);
-
-		let $ = cheerio.load(body);
-		let relativeLinks = $("a[href^='/']");		
-		if (relativeLinks.length > 0) {
-			relativeLinks.each(function() {
-				
-				urlNoProtocol = baseURL.replace(/^https:?\:\/\//i,"");
-
-				if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
-					if ($(this).attr('href').slice(2) === urlNoProtocol + $(this).attr('href').slice(urlNoProtocol.length + 2)) {
-						pagesToVisit.push($(this).attr('href').slice(2));
-					}
-				} else if ($(this).attr('href')[0] === '/' && $(this).attr('href')[1] !== '/') {
-					pagesToVisit.push(baseURL + $(this).attr('href'));
-				}
-			});
-		}
+		getRelativeLinks(body);
 		
 		pageVisited++;
 		callback();
 	})
+}
+
+function getRelativeLinks(body) {
+	let $ = cheerio.load(body);
+	let relativeLinks = $("a[href^='/']");		
+	if (relativeLinks.length > 0) {
+		console.log(relativeLinks.length);
+		relativeLinks.each(function() {
+			console.log($(this).attr('href'))
+			if ($(this).attr('href')[0] + $(this).attr('href')[1] === '//') {
+				if ($(this).attr('href').slice(2) === urlNoProtocol + $(this).attr('href').slice(urlNoProtocol.length + 2)) {
+					pagesToVisit.push($(this).attr('href').slice(2));
+				}
+			} else if ($(this).attr('href')[0] === '/' && $(this).attr('href')[1] !== '/') {
+				pagesToVisit.push(baseURL + $(this).attr('href'));
+			}
+		});
+	}
 }
 
 // stackoverflow.com/questions/3999764/taking-off-the-http-or-https-off-a-javascript-string
