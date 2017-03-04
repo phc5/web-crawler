@@ -40,7 +40,7 @@ Before cloning this repo, make sure you have the latest version of <a href="http
 	* URL must have protocol and domain. For example, https://www.google.com will work. www.google.com WILL NOT work.
 3. Get results in JSON format in an output.txt file. Web crawler may take some time to visit all reachable pages. 
 
-# History
+# TODOs
 
 - [x] Research web crawlers.
 - [x] Look up npm packages/modules that can help make HTTP requests, parse URL, and body of page.
