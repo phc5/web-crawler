@@ -67,6 +67,7 @@ This repo includes the test coverage with Istanbul, go into the coverage directo
 - [x] Get static asset: js
 - [x] Get static asset: stylesheets
 - [x] Write tests
+- [x] Test coverage with Istanbul
 - [x] Documentation 
 - [ ] Think of other TODOs
 
