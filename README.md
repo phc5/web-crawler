@@ -77,6 +77,8 @@ This repo includes the test coverage with Istanbul, go into the coverage directo
 - [npm request](https://www.npmjs.com/package/request)
 - [npm cheerio](https://www.npmjs.com/package/cheerio)
 - [npm url-parse](https://www.npmjs.com/package/url-parse)
+- [Istanbul](https://github.com/gotwarlost/istanbul)
+- [Learn Istanbul](https://github.com/dwyl/learn-istanbul)
 
 # Contributing / Comments
 
